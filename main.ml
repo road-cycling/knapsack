@@ -13,16 +13,10 @@ let fileOpen input =
       Array.append init (Array.create ~len:1 ( trimLine weight,  trimLine text))) 
 
 let fileWeight input =
-  In_channel.read_all (input ^ "_c.txt") 
-  |> trimLine
+  In_channel.read_all (input ^ "_c.txt") |> trimLine
 
-let getWeight bag i =
-  let ( w, _ ) = bag.(i) in 
-  w 
-
-let getValue bag i = 
-  let ( _, v ) = bag.(i) in 
-  v 
+let getWeight bag i = let ( w, _ ) = bag.(i) in w 
+let getValue  bag i = let ( _, v ) = bag.(i) in v 
 
 let t1a bag weight = 
   let matrix = Array.make_matrix ~dimx:((Array.length bag) + 1) ~dimy:(weight + 1) 0 in 
@@ -40,15 +34,33 @@ let t1a bag weight =
 
 ;;
 
+let memoize f =
+    let table = Core.Hashtbl.Poly.create () in
+    (fun x ->
+      match Core.Hashtbl.find table x with
+      | Some y -> y
+      | None ->
+        let y = f x in
+        Core.Hashtbl.add_exn table ~key:x ~data:y;
+        y
+    )
+
+let memo_rec f_norec x =
+  let fref = ref (fun _ -> assert false) in
+  let f = memoize (fun x -> f_norec !fref x) in
+  fref := f;
+  f x
+
+
 let t1b bag weight = 
-  let rec knapsack i currentVal weightLeft = 
+  let knapsack = memo_rec(fun knapsack (i, currentVal, weightLeft) -> 
     match (i = Array.length bag, weightLeft >= 0) with
     | ( true, true )  -> currentVal
     | ( false, true ) -> Pervasives.max 
-      ( knapsack (i + 1) currentVal weightLeft ) 
-      ( knapsack (i + 1) (currentVal + (getValue bag i)) (weightLeft - (getWeight bag i)) )
-    | ( _ , false ) -> 0
-  in knapsack 0 0 weight;
+      ( knapsack ((i + 1), currentVal, weightLeft) ) 
+      ( knapsack ((i + 1), (currentVal + (getValue bag i)), (weightLeft - (getWeight bag i))) )
+    | ( _ , false ) -> 0) 
+  in knapsack (0, 0, weight);
 
 ;;
 
@@ -60,13 +72,6 @@ let main =
   print_endline (string_of_int (t1a backpack weight));
   print_endline (string_of_int (t1b backpack weight));
   ;;
-  (* let bag = fileOpen in 
-  Array.sort bag ~compare:(fun (w1, _) (w2, _) -> Pervasives.compare w1 w2);
-  (* Array.iteri ~f:(fun _ (weight, value) -> 
-  print_endline ((string_of_int weight) ^ " " ^ (string_of_int value)) 
-  ) bag;; *)
-  print_endline (string_of_int (t1a bag));; *)
-
 
 (* 
     for i = 0 to (Array.length matrix) - 1 do 
