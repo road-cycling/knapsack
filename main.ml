@@ -16,9 +16,6 @@ let fileWeight input =
   In_channel.read_all (input ^ "_c.txt") 
   |> trimLine
 
-let getHighestValue array =
-  (Array.fold_right array ~f:(fun ( _, v ) init -> Pervasives.max v init ) ~init:0) + 1
-
 let getWeight bag i =
   let ( w, _ ) = bag.(i) in 
   w 
@@ -47,7 +44,9 @@ let t1b bag weight =
   let rec knapsack i currentVal weightLeft = 
     match (i = Array.length bag, weightLeft >= 0) with
     | ( true, true )  -> currentVal
-    | ( false, true ) -> Pervasives.max ( knapsack (i + 1) currentVal weightLeft ) ( knapsack (i + 1) (currentVal + (getValue bag i)) (weightLeft - (getWeight bag i)) )
+    | ( false, true ) -> Pervasives.max 
+      ( knapsack (i + 1) currentVal weightLeft ) 
+      ( knapsack (i + 1) (currentVal + (getValue bag i)) (weightLeft - (getWeight bag i)) )
     | ( _ , false ) -> 0
   in knapsack 0 0 weight;
 
