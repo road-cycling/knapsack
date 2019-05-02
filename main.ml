@@ -18,6 +18,12 @@ let fileWeight input =
 let getWeight bag i = let ( w, _ ) = bag.(i) in w 
 let getValue  bag i = let ( _, v ) = bag.(i) in v 
 
+let functionRunner f bag weight =
+  let t = Unix.gettimeofday () in
+  f bag weight;
+  Printf.printf "Execution time: %fs\n" (Unix.gettimeofday () -. t);
+;;
+
 let btbag ~table ~bag = 
   let x = Array.length table - 1 in 
   let y = Array.length table.(0) - 1 in 
@@ -69,77 +75,6 @@ let t1b bag weight =
   in knapsack (Array.length bag) weight;
 ;;
 
-
-let functionRunner f bag weight =
-  let t = Unix.gettimeofday () in
-  f bag weight;
-  Printf.printf "Execution time: %fs\n" (Unix.gettimeofday () -. t);
-;;
-
-(* let main = 
-  let input = ref "" in 
-  input := In_channel.(input_line_exn stdin);
-  let weight = fileWeight !input in 
-  let backpack = fileOpen !input in 
-  functionRunner t1a backpack weight;
-  functionRunner t1b backpack weight;
-  print_endline (string_of_int (t1b backpack weight));
-  ;; *)
-
-(* 
-    for i = 0 to (Array.length matrix) - 1 do 
-    for j = 0 to (Array.length matrix.(i)) - 1 do 
-      (* print_endline (" " ^ (string_of_int matrix.(i).(j)) ^ " "); *)
-      Printf.printf " %d " matrix.(i).(j)
-    done;
-    Printf.printf "\n"
-  done; *)
-
-
-  (* let memoize f =
-    let table = Core.Hashtbl.Poly.create () in
-    (fun x ->
-      let ( i, _, weightLeft) = x in
-      (* print_endline (string_of_int a); *)
-      match Core.Hashtbl.find table (i, weightLeft) with
-      | Some y -> y
-      | None ->
-        let y = f x in
-        Core.Hashtbl.add_exn table ~key:(i, weightLeft) ~data:y;
-        y
-    )
-
-let memo_rec f_norec x =
-  let fref = ref (fun _ -> assert false) in
-  let f = memoize (fun x -> f_norec !fref x) in
-  fref := f;
-  f x
-
-
-let t1b bag weight = 
-  let knapsack = memo_rec(fun knapsack (i, currentVal, weightLeft) -> 
-    match (i = Array.length bag, weightLeft >= 0) with
-    | ( true, true )  -> currentVal
-    | ( false, true ) -> Pervasives.max 
-      ( knapsack ((i + 1), currentVal, weightLeft) ) 
-      ( knapsack ((i + 1), (currentVal + (getValue bag i)), (weightLeft - (getWeight bag i))) )
-    | ( _ , false ) -> 0) 
-  in knapsack (0, 0, weight);
-
-;; *)
-
-(* let bt weight value table = 
-  let x = Array.length table - 1 in 
-  let y = Array.length table.(0) - 1 in 
-  let rec backtrack x y = 
-    if table.(x).(y) = 0 then []
-    else match ( table.(x - 1).(y) > table.(x).(y - 1) )
-    | true -> (backtrack (x - 1) y)::value.(i);
-    | false -> (backtrack x (y - 1))::value.(i - 1);
-  in backtrack x y ;;
-  (* print_endline ((string_of_int x) ^ (string_of_int y));
-  () *) *)
-
 let bt ~table ~weight ~value = 
   let x = Array.length table - 1 in 
   let y = Array.length table.(0) - 1 in 
@@ -156,20 +91,7 @@ let main =
   input := In_channel.(input_line_exn stdin);
   let weight = fileWeight !input in 
   let backpack = fileOpen !input in 
-  (* print_endline (string_of_int (t1a backpack weight)); *)
   functionRunner t1a backpack weight;
-  (* let weight = [|1; 3; 4; 5;|] in 
-  let value =  [|1; 4; 5; 7;|] in 
-
-  let table = [|
-    [| 0; 0; 0; 0; 0; 0; 0; 0; |];
-    [| 0; 1; 1; 1; 1; 1; 1; 1; |];
-    [| 0; 1; 1; 4; 5; 5; 5; 5; |];
-    [| 0; 1; 1; 4; 5; 6; 6; 9; |];
-    [| 0; 1; 1; 4; 5; 7; 8; 9; |];
-  |] in 
-
-  recurse (bt ~table:table ~weight:weight ~value:value)  *)
   ;;
 
 
