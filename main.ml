@@ -1,5 +1,6 @@
 open Core;;
 open Core_kernel;;
+open Htbl;;
 (* dune build main.exe && ./_build/default/main.exe *)
 
 let trimLine (s: string) = 
@@ -60,8 +61,9 @@ let t1a bag weight =
   recurse (btbag ~table:matrix ~bag:bag);
 ;;
 
-let t1b bag weight = 
-  let matrix = Array.make_matrix ~dimx:((Array.length bag) + 1) ~dimy:(weight + 1) (-1) in
+(* let t1b bag weight = 
+  (* let matrix = Array.make_matrix ~dimx:((Array.length bag) + 1) ~dimy:(weight + 1) (-1) in *)
+  let matrix = Htbl.getTbl in
   Array.map_inplace matrix.(0) ~f:(fun _ -> 0);
   let rec knapsack i j = 
     match matrix.(i).(j) < 0 with 
@@ -73,7 +75,28 @@ let t1b bag weight =
           matrix.(i).(j))
     | false -> matrix.(i).(j)
   in knapsack (Array.length bag) weight;
+;; *)
+
+let t1b bag weight matrix= 
+  let rec knapsack i j = 
+    match Htbl.find (i, j) matrix < 0 with 
+    | true -> 
+      (match j < (getWeight bag (i - 1)) with 
+        | true -> 
+          Htbl.insert (i, j) (knapsack (i - 1) j) matrix; 
+          Htbl.find (i, j) matrix;
+        | false -> Htbl.insert (i, j) (Pervasives.max (knapsack (i - 1) j) ((getValue bag (i - 1)) + knapsack (i - 1) (j - (getWeight bag (i - 1))))) matrix ;
+          Htbl.find (i, j) matrix)
+    | false -> Htbl.find (i, j) matrix
+  in knapsack (Array.length bag) weight;
+  (* print_endline ("Tradiasftional Dynamic Programming Optimal Value " ^ string_of_int (Array.last (Array.last matrix))); *)
+  (* Printf.printf "Traditional Dynamic Programming Optimal subset: "; *)
 ;;
+
+let t2brunner bag weight = 
+  let matrix = Htbl.getTbl in 
+  print_endline ("Using Hash Table: -> " ^ (string_of_int (t1b bag weight matrix)));;
+  (* Printf.printf "Traditional Dynamic Programming Optimal subset: ";; *)
 
 let t2a bag weight =
   let a = Array.mapi bag 
@@ -134,19 +157,24 @@ let reconstructFromIndices1 bag weight =
 
 ;;
 
+
 let main = 
   let input = ref "" in 
   input := In_channel.(input_line_exn stdin);
   let weight = fileWeight !input in 
   let backpack = fileOpen !input in 
+  print_endline "foo";
   functionRunner t1a backpack weight "Traditional Dynamic Programming";
-
   functionRunner reconstructFromIndices  backpack weight "Greedy Approach";
   functionRunner reconstructFromIndices1 backpack weight "Heap Based Greedy Approach"; 
-  (* functionRunner t1b backpack weight; *)
+  t2brunner backpack weight;
 
-  
-  ;;
+  (* let t = Htbl.getTbl  *)
+(* 
+  let myt = Htbl.getTbl in 
+  Htbl.insert (1, 3) 55 myt;
+  print_endline (string_of_int (Htbl.find (1,3) myt ))
+ *)
 
 
 
@@ -155,10 +183,7 @@ Traditional Dynamic Programming Optimal subset: {1, 3, 5, 7, 8, 9, 14, 15}
 Traditional Dynamic Programming Time Taken: <corresponding output here> *)
 
 
-(* module Htbl = struct 
-  let size = 10
-  let getTbl = Array.init size ~f:(fun _ -> Avltree.empty )
-end  *)
+
 
 (* let main =  *)
   (* let _ = Avltree.empty (1, 1) in
