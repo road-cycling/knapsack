@@ -1,0 +1,15 @@
+Traditional Dynamic Programming Optimal Value 1458
+Traditional Dynamic Programming Optimal subset: 15 14 9 8 7 5 3 1 
+Traditional Dynamic Programming Time Taken: 0.000307s
+
+Space-efficient Dynamic Programming Value: 1458
+Space-efficient Dynamic Programming Optimal Subset: 15 14 9 8 7 5 3 1 
+Space-efficient Dynamic Programming Time Taken: 0.004076s
+
+Greedy Approach Optimal value: 1302
+Greedy Approach Optimal subset: { 15 9 8 14 3 1 7 }
+Greedy Approach Time Taken: 0.000026s
+
+Heap-based Greedy Approach Optimal value: 1302
+Heap-based Greedy Approach Optimal subset: { 15 9 8 14 3 1 7 }
+Heap Based Greedy Approach Time Taken: 0.000018s

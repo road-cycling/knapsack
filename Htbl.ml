@@ -3,7 +3,15 @@ open Core_kernel;;
 
 module Htbl = struct 
   let size = 30
-  let getKey k_x k_y = ( ( k_x + k_y ) * ( k_x + k_y + 1 ) / 2 ) + k_y
+  (* let getKey k_x k_y = ( ( k_x + k_y ) * ( k_x + k_y + 1 ) / 2 ) + k_y *)
+
+  let log2 v = 
+    int_of_float (Float.round_up (log (float_of_int v)))
+
+
+  let getKey k_x k_y = 
+    let new_x = Int.shift_left k_x (log2 (k_y + 1)) in 
+    Int.shift_left 1 (log2 (new_x + 1) + log2 (k_y + 1)) + new_x + k_y
 
   let getTbl = Array.init size 
     ~f:(fun _ -> (Avltree.empty : (int, int * int * int) Avltree.t))

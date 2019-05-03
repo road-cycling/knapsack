@@ -61,22 +61,6 @@ let t1a bag weight =
   recurse (btbag ~table:matrix ~bag:bag);
 ;;
 
-(* let t1b bag weight = 
-  (* let matrix = Array.make_matrix ~dimx:((Array.length bag) + 1) ~dimy:(weight + 1) (-1) in *)
-  let matrix = Htbl.getTbl in
-  Array.map_inplace matrix.(0) ~f:(fun _ -> 0);
-  let rec knapsack i j = 
-    match matrix.(i).(j) < 0 with 
-    | true -> 
-      (match j < (getWeight bag (i - 1)) with 
-        | true -> matrix.(i).(j) <- knapsack (i - 1) j; matrix.(i).(j)
-        | false -> matrix.(i).(j) <- Pervasives.max 
-          (knapsack (i - 1) j) ((getValue bag (i - 1)) + knapsack (i - 1) (j - (getWeight bag (i - 1)))) ;
-          matrix.(i).(j))
-    | false -> matrix.(i).(j)
-  in knapsack (Array.length bag) weight;
-;; *)
-
 let t1b bag weight matrix= 
   let rec knapsack i j = 
     match Htbl.find (i, j) matrix < 0 with 
@@ -89,14 +73,27 @@ let t1b bag weight matrix=
           Htbl.find (i, j) matrix)
     | false -> Htbl.find (i, j) matrix
   in knapsack (Array.length bag) weight;
-  (* print_endline ("Tradiasftional Dynamic Programming Optimal Value " ^ string_of_int (Array.last (Array.last matrix))); *)
-  (* Printf.printf "Traditional Dynamic Programming Optimal subset: "; *)
 ;;
 
-let t2brunner bag weight = 
+let bthtable ~htable ~bag weight = 
+  let x = Array.length bag in 
+  let y = weight in 
+  let rec backtrack x y = 
+    if Htbl.find (x, y) htable = 0 then []
+    else if y - getWeight bag (x - 1) < 0 then [1]
+    else match ( Htbl.find (x - 1, y) htable > 
+    Htbl.find (x - 1, y - getWeight bag (x - 1)) htable + getValue bag (x - 1) ) with
+    | true -> backtrack (x - 1) y
+    | false -> x::backtrack (x - 1) (y - getWeight bag (x - 1))
+  in backtrack x y ;;
+
+
+let t1brunner bag weight = 
   let matrix = Htbl.getTbl in 
-  print_endline ("Using Hash Table: -> " ^ (string_of_int (t1b bag weight matrix)));;
-  (* Printf.printf "Traditional Dynamic Programming Optimal subset: ";; *)
+  print_endline ("Space-efficient Dynamic Programming Value: " ^ (string_of_int (t1b bag weight matrix)));
+  Printf.printf "Space-efficient Dynamic Programming Optimal Subset: ";
+  recurse (bthtable ~htable:matrix ~bag:bag weight);
+;;
 
 let t2a bag weight =
   let a = Array.mapi bag 
@@ -157,47 +154,51 @@ let reconstructFromIndices1 bag weight =
 
 ;;
 
-
 let main = 
   let input = ref "" in 
   input := In_channel.(input_line_exn stdin);
   let weight = fileWeight !input in 
   let backpack = fileOpen !input in 
-  print_endline "foo";
   functionRunner t1a backpack weight "Traditional Dynamic Programming";
+  functionRunner t1brunner backpack weight "Space-efficient Dynamic Programming";
   functionRunner reconstructFromIndices  backpack weight "Greedy Approach";
   functionRunner reconstructFromIndices1 backpack weight "Heap Based Greedy Approach"; 
-  t2brunner backpack weight;
-
-  (* let t = Htbl.getTbl  *)
-(* 
-  let myt = Htbl.getTbl in 
-  Htbl.insert (1, 3) 55 myt;
-  print_endline (string_of_int (Htbl.find (1,3) myt ))
- *)
-
-
-
-(* Traditional Dynamic Programming Optimal value: 1458
-Traditional Dynamic Programming Optimal subset: {1, 3, 5, 7, 8, 9, 14, 15}
-Traditional Dynamic Programming Time Taken: <corresponding output here> *)
 
 
 
 
-(* let main =  *)
-  (* let _ = Avltree.empty (1, 1) in
-  print_endline "done";
-  print_endline (string_of_int Htbl.size); *)
-  (* let f = Avltree.empty in 
-  let _ = Avltree.add f ~replace:false ~compare:(fun _ _ -> 1) ~key:5 ~data:10 in 
-  let _ = Array.init 10 ~f:(fun _ -> Avltree.empty) in
-  print_endline "done";; *)
 
-(* W      |   v
-1           1
-4           3   
-5           4
-7           5
 
-Vi / Wi *)
+
+
+(* let timerRunner f bag weight =
+  let t = Unix.gettimeofday () in
+  f bag weight;
+  Unix.gettimeofday () -. t;
+;;
+
+let getMeasurements weight backpack =   
+  ( Array.length backpack * weight, 10 + 2 * weight, Array.length backpack, Array.length backpack )
+
+let log2 v = 
+    int_of_float (Float.round_up (log (float_of_int v)))
+
+let task3 input = 
+  let weight = fileWeight input in 
+  let backpack = fileOpen input in
+  let (a_space, b_space, c_space, d_space) = getMeasurements weight backpack in 
+  let a_time = timerRunner t1a backpack weight in
+  let b_time = timerRunner t1brunner backpack weight in 
+  let c_time = timerRunner reconstructFromIndices  backpack weight in 
+  let d_time = timerRunner reconstructFromIndices1 backpack weight in 
+  ( (log2 a_space, a_time), (log2 b_space, b_time), (log2 c_space, c_time), (log2 d_space, d_time) )
+
+
+
+let main3 =
+  for i = 0 to 8 do 
+    let ( (s_1, t_1), (s_2, t_2), (s_3, t_3), (s_4, t_4) ) = task3 ("p0" ^ string_of_int i) in 
+    Printf.printf "I: %d \n" i;
+    Printf.printf "%d, %f\n %d, %f\n %d, %f\n %d, %f\n" s_1 t_1 s_2 t_2 s_3 t_3 s_4 t_4;
+  done;;
+  print_endline "Finished";; *)
