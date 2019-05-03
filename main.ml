@@ -1,5 +1,5 @@
 open Core;;
-
+open Core_kernel;;
 (* dune build main.exe && ./_build/default/main.exe *)
 
 let trimLine (s: string) = 
@@ -18,10 +18,10 @@ let fileWeight input =
 let getWeight bag i = let ( w, _ ) = bag.(i) in w 
 let getValue  bag i = let ( _, v ) = bag.(i) in v 
 
-let functionRunner f bag weight =
+let functionRunner f bag weight print  =
   let t = Unix.gettimeofday () in
   f bag weight;
-  Printf.printf "Time Taken: %fs\n" (Unix.gettimeofday () -. t);
+  Printf.printf "%s Time Taken: %fs\n\n" print (Unix.gettimeofday () -. t);
 ;;
 
 
@@ -41,7 +41,6 @@ let rec recurse lst =
   match lst with 
   | [] -> Printf.printf "\n"
   | hd::tl -> Printf.printf "%d " hd; recurse tl
-  (* | hd::tl -> print_endline (string_of_int hd); recurse tl *)
 ;;
 
 let t1a bag weight = 
@@ -56,10 +55,9 @@ let t1a bag weight =
           ( matrix.(i - 1).(j) )
     done;
   done;
-  Printf.printf "Optimal subset: ";
+  print_endline ("Traditional Dynamic Programming Optimal Value " ^ string_of_int (Array.last (Array.last matrix)));
+  Printf.printf "Traditional Dynamic Programming Optimal subset: ";
   recurse (btbag ~table:matrix ~bag:bag);
-  print_endline ("Optimal Value " ^ string_of_int (Array.last (Array.last matrix)));
-  (* Array.last (Array.last matrix) *)
 ;;
 
 let t1b bag weight = 
@@ -77,7 +75,7 @@ let t1b bag weight =
   in knapsack (Array.length bag) weight;
 ;;
 
-let foo bag weight =
+let t2a bag weight =
   let a = Array.mapi bag 
     ~f:(fun idx (w, v) -> (
       float_of_int v /. float_of_int w,
@@ -87,24 +85,67 @@ let foo bag weight =
     )) in 
   Array.sort a ~compare:(fun (x, _, _, _) (y, _, _, _) -> if x = y then 0 else if x > y then -1 else 1);
   let rec greedy idx currentValue weightLeft = 
-    let ( _ , value, weight, _ ) = a.(idx) in 
+    let ( _ , value, weight, i ) = a.(idx) in 
     match (idx = Array.length bag, weightLeft >= 0, weight >= weightLeft) with 
-    | ( _, _, true ) -> currentValue 
-    | ( _, false, _ ) -> 0
-    | ( false, true, _ ) -> greedy (idx + 1) (currentValue + value) (weightLeft - weight)
-    | ( true, true, _ ) -> currentValue
+    | ( _, _, true ) | ( _, false, _ ) | ( true, true, _ ) -> [] 
+    | ( false, true, _ ) -> (value, i + 1)::greedy (idx + 1) (currentValue + value) (weightLeft - weight)
   in greedy 0 0 weight;
 ;;
 
+(* //Heap Approach *)
+let t2b bag weight =
+  let arr = Array.mapi bag 
+    ~f:(fun idx (w, v) -> (
+      float_of_int v /. float_of_int w,
+      getValue bag idx,
+      getWeight bag idx,
+      idx
+    )) in 
+  let a = Heap.of_array arr 
+    ~cmp:(fun (x, _, _, _) (y, _, _, _) -> if x = y then 0 else if x > y then -1 else 1) in
+  let rec greedy weightLeft = 
+    match (Heap.pop a) with 
+    | Some (_, value, weight, i) -> 
+        (match weight >= weightLeft with 
+        | false -> (value, i + 1)::greedy (weightLeft - weight)
+        | true -> [])
+    | None -> []
+  in greedy weight;
+;;
+
+let reconstructFromIndices bag weight = 
+  let ( totalValue, lst ) =  List.fold_right (t2a bag weight) 
+    ~f:(fun (value, idx) (accumValue, oIdx) -> (value + accumValue, idx::oIdx)) 
+    ~init:(0, []) in
+  print_endline ("Greedy Approach Optimal value: " ^ (string_of_int totalValue));
+  Printf.printf "Greedy Approach Optimal subset: { ";
+  List.iteri lst ~f:(fun _ v -> Printf.printf "%d " v);
+  Printf.printf "}\n";
+;;
+
+let reconstructFromIndices1 bag weight = 
+  let ( totalValue, lst ) =  List.fold_right (t2b bag weight) 
+    ~f:(fun (value, idx) (accumValue, oIdx) -> (value + accumValue, idx::oIdx)) 
+    ~init:(0, []) in
+  print_endline ("Heap-based Greedy Approach Optimal value: " ^ (string_of_int totalValue));
+  Printf.printf "Heap-based Greedy Approach Optimal subset: { ";
+  List.iteri lst ~f:(fun _ v -> Printf.printf "%d " v);
+  Printf.printf "}\n";
+
+;;
 
 let main = 
   let input = ref "" in 
   input := In_channel.(input_line_exn stdin);
   let weight = fileWeight !input in 
   let backpack = fileOpen !input in 
-  print_endline (string_of_int (foo backpack weight))
-  (* functionRunner t1a backpack weight; *)
-  (* foo backpack weight;; *)
+  functionRunner t1a backpack weight "Traditional Dynamic Programming";
+
+  functionRunner reconstructFromIndices  backpack weight "Greedy Approach";
+  functionRunner reconstructFromIndices1 backpack weight "Heap Based Greedy Approach"; 
+  (* functionRunner t1b backpack weight; *)
+
+  
   ;;
 
 
