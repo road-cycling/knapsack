@@ -86,16 +86,13 @@ let foo bag weight =
       idx
     )) in 
   Array.sort a ~compare:(fun (x, _, _, _) (y, _, _, _) -> if x = y then 0 else if x > y then -1 else 1);
-  Array.iteri ~f:(fun _ (a, b, c, i) -> 
-    print_endline (string_of_float a ^ " " ^ string_of_int b ^ " " ^ string_of_int c ^ " " ^ string_of_int i)
-  ) a;
   let rec greedy idx currentValue weightLeft = 
     let ( _ , value, weight, _ ) = a.(idx) in 
     match (idx = Array.length bag, weightLeft >= 0, weight >= weightLeft) with 
     | ( _, _, true ) -> currentValue 
-    | ( _, false, _ ) -> print_endline "2"; 0
-    | ( false, true, _ ) -> print_endline "3"; greedy (idx + 1) (currentValue + value) (weightLeft - weight)
-    | ( true, true, _ ) -> print_endline "4"; currentValue
+    | ( _, false, _ ) -> 0
+    | ( false, true, _ ) -> greedy (idx + 1) (currentValue + value) (weightLeft - weight)
+    | ( true, true, _ ) -> currentValue
   in greedy 0 0 weight;
 ;;
 
